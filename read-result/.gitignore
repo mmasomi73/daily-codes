@@ -173,6 +173,7 @@ venv.bak/
 pythonenv*
 
 /outs
+/out
 /res
 *.txt
 *.csv
