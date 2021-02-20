@@ -1,12 +1,12 @@
-import io
-import argparse
+import os
+from tqdm import tqdm
 import requests as req
 from bs4 import BeautifulSoup as bs
 import progressbar
 
 
 def main(file_index, link):
-    print("Please wait...")
+    print("initialing Connection to apart URL ...")
     mainPage = req.get(link).content
     main_soup = bs(mainPage, 'html.parser')
     main_name = main_soup.find("span", attrs={"class": "d-in v-m"}).text.encode()
@@ -36,33 +36,32 @@ def main(file_index, link):
             elif "480" in qual.get('aria-label'):
                 links[name] = qual.get('href')
     bar.finish()
-    print("writing download list ...")
+    print("fetching download list ...")
     i = 1
     for name, videoLink in links.items():
-        print('\n\t Download start {}'.format(videoLink), end =" ")
-        r = req.get(videoLink)
         origin_url = videoLink.split("?")[0]
         file_name = origin_url.split('/')[4]
-        # file.write('{}|{:03d}_{}.mp4\n'.format(file_name, i, name.decode('utf-8')))
+        r = req.get(videoLink, stream=True)
+        # -------------------------------------
+        total_size_in_bytes = int(r.headers.get('content-length', 0))
+        block_size = 1024  # 1 Kibibyte
+        progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True, ncols=75, ascii=True)
+
+        CHECK_FOLDER = os.path.isdir('Videos/' + main_name.decode('utf-8'))
+        if not CHECK_FOLDER:
+            os.makedirs('Videos/' + main_name.decode('utf-8'))
+
+        with open('Videos/{}/{:03d}_{}.mp4'.format(main_name.decode('utf-8'), i, name.decode('utf-8')), 'wb') as f:
+            for data in r.iter_content(block_size):
+                progress_bar.set_description("\tDownload {}/{} file:{}".format(i, len(links.items()), file_name))
+                progress_bar.update(len(data))
+                f.write(data)
+        progress_bar.close()
+        if total_size_in_bytes != 0 and progress_bar.n != total_size_in_bytes:
+            print("ERROR, something went wrong")
+
+        # -------------------------------------
         i += 1
-        with open('Videos\\{:03d}_{}.mp4'.format(i, name.decode('utf-8'), 'wb')) as f:
-            f.write(r.content)
-    # with io.open('download_links.txt'.format(file_index), "a", encoding="utf-8") as file:
-    #     file.write("\n-----------------------=\n{}\n-----------------------=\n\n".format(main_name.decode('utf-8')))
-    #     i = 1
-    #     for name, videoLink in links.items():
-    #         file.write('{}\n'.format(videoLink))
-    #         i += 1
-    # with io.open('link_names.txt'.format(file_index), "a", encoding="utf-8") as file:
-    #     i = 1
-    #     for name, videoLink in links.items():
-    #         origin_url = videoLink.split("?")[0]
-    #         file_name = origin_url.split('/')[4]
-    #         file.write('{}|{:03d}_{}.mp4\n'.format(file_name, i, name.decode('utf-8')))
-    #         i += 1
-    #         # print(file_name)
-
-
 
 
 if __name__ == "__main__":
@@ -70,7 +69,7 @@ if __name__ == "__main__":
     quality = "720"
     itr = 0
     for pls_link in links_file:
-        print("\n---------------------------------------\n")
+        print("\n---------------------------------------")
         print('working on List {}'.format(pls_link))
         itr += 1
         main(itr, pls_link)

@@ -16,8 +16,7 @@ def remaner(link_names_file):
 
 
 link_names = [
-        "link_names_1.txt",
-        "link_names_2.txt"
+        "link_names.txt"
     ]
 quality = "720"
 itr = 0
