@@ -52,6 +52,7 @@ cmake-build-*/
 
 # IntelliJ
 out/
+files/*
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
@@ -170,14 +171,13 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-Videos/
 pythonenv*
 
 /outs
+/out
 /res
 *.txt
 *.csv
 *.xml
 *.iml
-*.zip
-*.exe
+*.json
